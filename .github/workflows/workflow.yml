@@ -80,6 +80,20 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
+      - name: Setup Spacy model and download NLTK data
+        run: |
+          sudo add-apt-repository ppa:deadsnakes/ppa
+          sudo apt update
+          sudo apt install -y python3.11 python3.11-venv
+          python3.11 -m venv .venv
+          source .venv/bin/activate
+          pip install -r requirements.txt -r requirements-all.txt
+          python -m spacy download en_core_web_sm
+          python -c "import nltk;nltk.download('averaged_perceptron_tagger')"
+          python -c "import nltk;nltk.download('punkt')"
+          python -c "import nltk;nltk.download('vader_lexicon')"
+          python -c "import nltk;nltk.download('stopwords')"
+
       - name: Test Python app
         uses: swiss-ai-center/common-code/.github/actions/test-python-app@main
         with:
