@@ -1,10 +1,6 @@
 # Base image
 FROM python:3.11
 
-# Install all required packages to run the model
-# TODO: 1. Add any additional packages required to run your model
-# RUN apt update && apt install --yes package1 package2 ...
-
 # Work directory
 WORKDIR /app
 
@@ -31,6 +27,15 @@ EXPOSE 80
 
 # Switch to src directory
 WORKDIR "/app/src"
+
+# download spacy model
+RUN python3 -m spacy download en_core_web_sm
+
+# download nltk data
+RUN python -c "import nltk;nltk.download('averaged_perceptron_tagger')"
+RUN python -c "import nltk;nltk.download('punkt')"
+RUN python -c "import nltk;nltk.download('vader_lexicon')"
+RUN python -c "import nltk;nltk.download('stopwords')"
 
 # Command to run on start
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

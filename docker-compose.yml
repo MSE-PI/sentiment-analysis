@@ -14,8 +14,16 @@ services:
         fi &&
         # Activate the virtual environment
         source .venv/bin/activate &&
+        pip install --upgrade pip &&
         # Install the dependencies
         pip install -r requirements.txt -r requirements-all.txt &&
+        # download spacy model
+        python3 -m spacy download en_core_web_sm &&
+        # download nltk data
+        python -c \"import nltk;nltk.download('averaged_perceptron_tagger')\" &&
+        python -c \"import nltk;nltk.download('punkt')\" &&
+        python -c \"import nltk;nltk.download('vader_lexicon')\" &&
+        python -c \"import nltk;nltk.download('stopwords')\" &&
         # Run the service
         cd src &&
         uvicorn --reload --host 0.0.0.0 --port 9090 main:app
