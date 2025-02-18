@@ -286,8 +286,10 @@ app.add_middleware(
 async def root():
     return RedirectResponse("/docs", status_code=301)
 
+
 class Data(BaseModel):
     text: str
+
 
 @app.post("/process", tags=['Process'])
 def handle_process(data: Data):
