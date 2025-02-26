@@ -139,7 +139,7 @@ class MyService(Service):
             description=api_description,
             status=ServiceStatus.AVAILABLE,
             data_in_fields=[
-                FieldDescription(name="text", type=[FieldDescriptionType.TEXT_PLAIN]),
+                FieldDescription(name="text", type=[FieldDescriptionType.APPLICATION_JSON]),
             ],
             data_out_fields=[
                 FieldDescription(name="result", type=[FieldDescriptionType.APPLICATION_JSON]),
@@ -158,10 +158,9 @@ class MyService(Service):
 
     def process(self, data):
         # Get the text to analyze from storage
-        text = data["text"].data
-        # Convert bytes to string
-        text = text.decode("utf-8")
-        # Get the language and sentiments
+        text = json.loads(data["text"].data)["transcription"]
+
+        # Get the language and sentiments from the json field
         language, sentiments = get_metadata(text)
         top_words = get_top_n(get_text_tf_idf_score(text), 10)
 
@@ -245,14 +244,17 @@ Analyze sentiment and emotions of a given text.
 """
 
 api_description = """
-Analyze sentiment of a given text. Returns a JSON object with the following fields:
+Analyze sentiment of a given text.
+The input is a JSON object with the following fields:
+- `transcription`: the text to analyze
+
+Returns a JSON object with the following fields:
 - `language`: the language of the text
 - `sentiment`: the sentiments detected in the text
 - `top_words`: the top words in the text
 """
 
 # Define the FastAPI application with information
-# TODO: 7. CHANGE THE API TITLE, VERSION, CONTACT AND LICENSE
 app = FastAPI(
     lifespan=lifespan,
     title="Sentiment Analysis API.",
@@ -288,12 +290,14 @@ async def root():
 
 
 class Data(BaseModel):
-    text: str
+    transcription: str
 
 
 @app.post("/process", tags=['Process'])
 def handle_process(data: Data):
-    result = MyService().process({"text": TaskData(data=data.text, type=FieldDescriptionType.TEXT_PLAIN)})
+    result = MyService().process(
+        {"text": TaskData(data=json.dumps(data.model_dump()).encode("UTF-8"),
+                          type=FieldDescriptionType.APPLICATION_JSON)})
 
     data = json.loads(result["result"].data)
     return data
